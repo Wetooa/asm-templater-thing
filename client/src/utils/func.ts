@@ -40,16 +40,21 @@ export function generateCode(data: DataProps): string {
     ${data.shortenedLabel}No${i}LblLen: equ $-${data.shortenedLabel}No${i}Lbl`
   }
 
+  const capitalizedName = data.fullname.split(' ').map((name) => _.capitalize(name)).join(' ');
+  const date = new Date().toDateString();
+
   result += `
 
     ; FOOTER
-    lblProgrammerName: db " ", 10, "", 10, "Programmer Name: "
+    endingMessage: db " ", 10, "", 10, "${data.endingMessage}", 10, 10
+    endingMessageLen: equ $-endingMessage
+    lblProgrammerName: db "Programmer Name: "
     lblProgrammerNameLen: equ $-lblProgrammerName
-    programmerName: db "Adrian Sajulga", 10
+    programmerName: db "${capitalizedName}", 10
     programmerNameLen: equ $-programmerName
     lblDate: db "Date: "  
     lblDateLen: equ $-lblDate
-    date: db "10-5-2023"
+    date: db "${date}"
     dateLen: equ $-date
   `
 
@@ -138,6 +143,11 @@ export function generateCode(data: DataProps): string {
   result += `
 
     ; DISPLAY FOOTER
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, endingMessage
+    mov edx, endingMessageLen
+    int 80h
     mov eax, 4
     mov ebx, 1
     mov ecx, lblProgrammerName

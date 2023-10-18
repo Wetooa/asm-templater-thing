@@ -10,7 +10,9 @@
   }
 }
 
-body {
+body,
+html {
+  scroll-behavior: smooth;
 }
 
 @layer base {

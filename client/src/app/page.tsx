@@ -1,28 +1,37 @@
 "use client";
 
 import Input from "@/components/Input";
-import { AiOutlineCopy } from "react-icons/ai";
+import { AiOutlineArrowUp, AiOutlineCopy } from "react-icons/ai";
 import {
   DEFAULT_PARAMS,
   EMPTY_PARAMS,
   NUMBER_OF_ESSENTIAL_DATA,
   defaultToastConfig,
 } from "@/utils/constants";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { generateCode } from "@/utils/func";
 import { toast } from "react-toastify";
+import Textarea from "@/components/Textarea";
 
 export default function Home() {
   const [generatedCode, setGeneratedCode] = useState("");
   const [data, setData] = useState<DataProps>(EMPTY_PARAMS);
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  const codeContainer = useRef<HTMLElement>(null);
+  const mainContainer = useRef<HTMLElement>(null);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedCode);
-    toast("Copied ASM Code to clipboard", defaultToastConfig);
+    toast.success("Copied ASM Code to clipboard", defaultToastConfig);
   };
 
   const handleSubmit = () => {
     setGeneratedCode(generateCode(data));
+    codeContainer.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   const handleGenerateDefaultParameters = () => {
@@ -34,12 +43,29 @@ export default function Home() {
     setGeneratedCode("");
   };
 
-  const handleOnChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleOnChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
 
+  const handleScroll = useCallback(() => {
+    setScrollPosition(window.scrollY);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      console.log("cleanu");
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [handleScroll]);
+
   return (
-    <main className="flex flex-col items-center">
+    <main
+      ref={mainContainer}
+      className="flex flex-col items-center my-5 relative"
+    >
       <div className="flex flex-col justify-center p-6">
         <h2 className="font-bold text-4xl">Enter Parameters</h2>
 
@@ -76,6 +102,13 @@ export default function Home() {
           })}
         </div>
 
+        <Textarea
+          name="endingMessage"
+          onChange={handleOnChange}
+          value={data.endingMessage}
+          display="ending message"
+        />
+
         <div className="flex gap-4 p-2">
           <button
             onClick={handleGenerateDefaultParameters}
@@ -101,8 +134,11 @@ export default function Home() {
         </div>
       </div>
 
-      <section className="p-5 bg-gray-500 min-h-screen h-full w-[95%] rounded-lg ">
-        <p className="whitespace-pre-wrap break-words w-full h-full bg-slate-200 max-w-full rounded-lg p-2 relative">
+      <section
+        ref={codeContainer}
+        className="p-5 bg-gray-500 min-h-screen h-full w-[95%] rounded-lg "
+      >
+        <div className="whitespace-pre-wrap break-words w-full min-h-screen bg-slate-200 max-w-full rounded-lg p-2 relative">
           <button
             className="absolute text-2xl right-3 top-3"
             onClick={copyToClipboard}
@@ -110,8 +146,17 @@ export default function Home() {
             <AiOutlineCopy />
           </button>
           {generatedCode}
-        </p>
+        </div>
       </section>
+
+      <button
+        onClick={() => scrollTo({ top: 0, behavior: "smooth" })}
+        className={`sticky bottom-10 right-10 text-4xl z-20 bg-slate-100 opacity-90 transition-all ${
+          scrollPosition < 300 && "hidden"
+        }`}
+      >
+        <AiOutlineArrowUp />
+      </button>
     </main>
   );
 }

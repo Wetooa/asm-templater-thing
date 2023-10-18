@@ -8,4 +8,5 @@ interface DataProps {
   essentialData3: string;
   essentialData4: string;
   essentialData5: string;
+  endingMessage: string;
 }
